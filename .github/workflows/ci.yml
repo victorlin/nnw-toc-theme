@@ -1,0 +1,63 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/ci.yml"
+      - "Default-TOC.nnwtheme/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Package theme
+        run: |
+          mkdir -p dist
+          zip -r dist/Default-TOC.nnwtheme.zip Default-TOC.nnwtheme
+          touch dist/.nojekyll
+          cat <<'EOF' > dist/index.html
+          <!doctype html>
+          <html lang="en">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <title>nnw-toc-theme</title>
+            </head>
+            <body>
+              <h1>nnw-toc-theme</h1>
+              <p>Custom theme for <a href="https://netnewswire.com">NetNewsWire</a> with a table of contents.</p>
+              <ul>
+                <li><a href="netnewswire://theme/add?url=https%3A%2F%2Fvictorlin.github.io%2Fnnw-toc-theme%2FDefault-TOC.nnwtheme.zip">Install in NetNewsWire</a></li>
+                <li><a href="./Default-TOC.nnwtheme.zip">Download zip</a></li>
+                <li><a href="https://github.com/victorlin/nnw-toc-theme">Source code</a></li>
+              </ul>
+            </body>
+          </html>
+          EOF
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
