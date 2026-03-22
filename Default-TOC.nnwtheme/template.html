@@ -45,3 +45,76 @@ body: The body of the article.
 <div class="externalLink">[[external_link_label]] <a href="[[external_link]]">[[external_link_stripped]]</a></div>
 <div id="bodyContainer" class="articleBody [[text_size_class]]">[[body]]</div>
 </article>
+
+<script type="text/javascript">
+(() => {
+	const bodyContainer = document.getElementById('bodyContainer');
+	if (!bodyContainer) return;
+
+	const headers = Array.from(bodyContainer.querySelectorAll('h1, h2, h3, h4, h5, h6'));
+	if (headers.length === 0) return;
+
+	const slugCounts = {};
+
+	function slugify(text) {
+		const baseSlug = text
+			.toLowerCase()
+			.trim()
+			.replace(/[^a-z0-9\s-]/g, '')
+			.replace(/\s+/g, '-')
+			.replace(/-+/g, '-') || 'section';
+
+		const currentCount = slugCounts[baseSlug] || 0;
+		slugCounts[baseSlug] = currentCount + 1;
+		return currentCount === 0 ? baseSlug : `${baseSlug}-${currentCount + 1}`;
+	}
+
+	const toc = document.createElement('nav');
+	toc.id = 'nnwTableOfContents';
+	toc.setAttribute('aria-label', 'Table of contents');
+
+	const tocTitle = document.createElement('h2');
+	tocTitle.textContent = 'Table of Contents';
+	toc.appendChild(tocTitle);
+
+	const tocList = document.createElement('ol');
+	headers.forEach((header) => {
+		const title = header.textContent.trim();
+		if (title === '') {
+			return;
+		}
+
+		header.style.scrollMarginTop = '1rem';
+
+		if (!header.id) {
+			header.id = slugify(title);
+		}
+
+		const item = document.createElement('li');
+		item.className = `toc-level-${header.tagName.slice(1)}`;
+
+		const link = document.createElement('a');
+		link.href = `#${header.id}`;
+		link.textContent = title;
+		link.dataset.targetId = header.id;
+		link.addEventListener('click', (event) => {
+			event.preventDefault();
+			header.scrollIntoView({ behavior: 'smooth', block: 'start' });
+		});
+
+		item.appendChild(link);
+		tocList.appendChild(item);
+	});
+
+	if (tocList.childElementCount === 0) return;
+
+	toc.appendChild(tocList);
+
+	// Insert before the top-level block containing the first heading
+	let insertionTarget = headers[0];
+	while (insertionTarget.parentElement && insertionTarget.parentElement !== bodyContainer) {
+		insertionTarget = insertionTarget.parentElement;
+	}
+	bodyContainer.insertBefore(toc, insertionTarget);
+})();
+</script>
