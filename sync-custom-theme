@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+custom_theme="Default-TOC.nnwtheme"
+
+# 1. Copy to macOS themes folder
+themes_folder="$HOME/Library/Containers/com.ranchero.NetNewsWire-Evergreen/Data/Library/Application Support/NetNewsWire/Themes"
+cp -rp "${custom_theme}/" "${themes_folder}/Default-TOC.nnwtheme/"
+
+# 2. Copy to iCloud Drive for iOS
+drive="$HOME/Library/Mobile Documents/com~apple~CloudDocs"
+cp -rp "${custom_theme}/" "${drive}/_root/Default-TOC.nnwtheme/"
